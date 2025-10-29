@@ -84,9 +84,39 @@ router.post("/login", async (req, res) => {
           id: user._id,
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
-          token: token
+          token: token,
         },
       });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Forgot Password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    const resetLink = `http://localhost:5000/reset-password/${resetToken}`;
+
+    res.status(200).json({
+      message: "Password reset link generated successfully",
+      resetLink,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

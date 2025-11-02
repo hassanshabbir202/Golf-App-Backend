@@ -2,16 +2,19 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
-// SignUp
+// POST SignUp
 router.post("/signup", async (req, res) => {
   try {
     const { firstName, lastName, email, password, inviteCode } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !inviteCode) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({
+        message: "First name, last name, email, and password are required",
+      });
     }
 
     const existingUser = await User.findOne({ email });
@@ -26,7 +29,7 @@ router.post("/signup", async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      inviteCode,
+      inviteCode: inviteCode ? inviteCode : "",
     });
 
     await newUser.save();
@@ -37,6 +40,7 @@ router.post("/signup", async (req, res) => {
         id: newUser._id,
         name: `${newUser.firstName} ${newUser.lastName}`,
         email: newUser.email,
+        inviteCode: newUser.inviteCode,
       },
     });
   } catch (err) {
@@ -45,7 +49,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Login
+// POST Login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -67,16 +71,19 @@ router.post("/login", async (req, res) => {
     }
 
     const payload = { userId: user._id, email: user.email };
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+      expiresIn: "30d",
     });
+
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
 
     res
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: thirtyDays,
       })
       .json({
         message: "Login successful",
@@ -93,33 +100,19 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Forgot Password
-router.post("/forgot-password", async (req, res) => {
+// POST LogOut
+router.post("/logout", (req, res) => {
   try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     });
 
-    const resetLink = `http://localhost:5000/reset-password/${resetToken}`;
-
-    res.status(200).json({
-      message: "Password reset link generated successfully",
-      resetLink,
-    });
+    return res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error during logout" });
   }
 });
 

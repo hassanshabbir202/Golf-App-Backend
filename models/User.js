@@ -22,12 +22,12 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
+      minlength: [8, "Password must be at least 8 characters long"],
     },
     inviteCode: {
       type: String,
-      required: [true, "Invite code is required"],
       trim: true,
+      default: "",
     },
   },
   { timestamps: true }

@@ -129,7 +129,7 @@ router.post("/forgot-password", async (req, res) => {
       expiresIn: "1h",
     });
 
-    const resetLink = `${process.env.BASE_URL}/api/auth/reset-password/${token}`;
+    const resetLink = `https://golf-app-backend-production.up.railway.app/api/auth/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",

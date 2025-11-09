@@ -140,8 +140,8 @@ router.post("/forgot-password", async (req, res) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Golf App <onboarding@resend.dev>",
-        to: user.email,
+        from: "Golf App <hassanshbeer279@gmail.com>",
+        to: "hassanshbeer279@gmail.com",
         subject: "Password Reset Request",
         html: `
           <p>Hi ${user.name || ""},</p>

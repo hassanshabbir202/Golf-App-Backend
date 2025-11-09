@@ -2,7 +2,6 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const fetch = require("node-fetch");
 
 const router = express.Router();
 
@@ -133,7 +132,7 @@ router.post("/forgot-password", async (req, res) => {
     // Reset link for password reset
     const resetLink = `https://golf-app-backend-production.up.railway.app/api/auth/reset-password/${token}`;
 
-    // ✅ Send email using Resend API instead of Gmail SMTP
+    // ✅ Send email using Resend API
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {

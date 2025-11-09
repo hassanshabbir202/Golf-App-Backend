@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const fetch = require("node-fetch");
 
 const router = express.Router();
 
@@ -125,30 +125,46 @@ router.post("/forgot-password", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Generate JWT token valid for 1 hour
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
+    // Reset link for password reset
     const resetLink = `https://golf-app-backend-production.up.railway.app/api/auth/reset-password/${token}`;
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+    // ✅ Send email using Resend API instead of Gmail SMTP
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        from: "Golf App <onboarding@resend.dev>",
+        to: user.email,
+        subject: "Password Reset Request",
+        html: `
+          <p>Hi ${user.name || ""},</p>
+          <p>We received a request to reset your password.</p>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetLink}" target="_blank">${resetLink}</a>
+          <p>This link will expire in 1 hour.</p>
+          <br/>
+          <p>If you didn't request this, please ignore this email.</p>
+        `,
+      }),
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `<p>Click the link to reset your password:</p><a href="${resetLink}">${resetLink}</a>`,
-    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Email sending failed:", errorText);
+      return res.status(500).json({ message: "Failed to send email" });
+    }
 
     res.status(200).json({ message: "Reset password link sent to your email" });
   } catch (err) {
-    console.error(err);
+    console.error("Forgot password error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

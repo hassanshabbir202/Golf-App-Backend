@@ -8,7 +8,8 @@ const router = express.Router();
 // POST SignUp
 router.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, inviteCode } = req.body;
+    const { firstName, lastName, email, password, inviteCode, phoneNumber } =
+      req.body;
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
@@ -28,7 +29,19 @@ router.post("/signup", async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      inviteCode: inviteCode ? inviteCode : "",
+      phoneNumber: phoneNumber || "",
+      role: "player",
+      inviteCode: inviteCode || "",
+      referredBy: inviteCode ? inviteCode : "",
+      followers: 0,
+      following: 0,
+      courses: 0,
+      avgScore: 0,
+      rounds: 0,
+      handicap: 0,
+      status: "active",
+      isVerified: false,
+      profileImage: "",
     });
 
     await newUser.save();
@@ -39,12 +52,23 @@ router.post("/signup", async (req, res) => {
         id: newUser._id,
         name: `${newUser.firstName} ${newUser.lastName}`,
         email: newUser.email,
+        phoneNumber: newUser.phoneNumber,
+        role: newUser.role,
+        status: newUser.status,
+        followers: newUser.followers,
+        following: newUser.following,
+        courses: newUser.courses,
+        avgScore: newUser.avgScore,
+        rounds: newUser.rounds,
+        handicap: newUser.handicap,
         inviteCode: newUser.inviteCode,
+        referredBy: newUser.referredBy,
+        createdAt: newUser.createdAt,
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Server error during signup" });
   }
 });
 

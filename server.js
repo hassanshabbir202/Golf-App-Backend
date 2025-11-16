@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./db/connection");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const golfCourses = require("./routes/golfCourses");
 
 dotenv.config();
 connectDB();
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/golfCourses", golfCourses);
 
 app.listen(PORT, () => {
   console.log(`Server is Running at port ${PORT}`);

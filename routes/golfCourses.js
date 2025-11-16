@@ -25,17 +25,21 @@ router.get("/nearby", async (req, res) => {
 
     const response = await axios.get(url, { headers });
 
-    const golfCourses = response.data.results.map((place) => ({
-      name: place.name,
-      country: place.location.country || "Unknown",
-      latitude: place.geocodes?.main?.latitude || null,
-      longitude: place.geocodes?.main?.longitude || null,
-      image:
-        place.categories?.[0]?.icon?.prefix &&
-        place.categories?.[0]?.icon?.suffix
-          ? `${place.categories[0].icon.prefix}256${place.categories[0].icon.suffix}`
-          : "https://ss3.4sqi.net/img/categories_v2/golf/default_256.png",
-    }));
+    const golfCourses = response.data.results
+      .filter((place) =>
+        place.categories?.some((cat) => cat.name.toLowerCase().includes("golf"))
+      )
+      .map((place) => ({
+        name: place.name,
+        country: place.location.country || "Unknown",
+        latitude: place.geocodes?.main?.latitude || null,
+        longitude: place.geocodes?.main?.longitude || null,
+        image:
+          place.categories?.[0]?.icon?.prefix &&
+          place.categories?.[0]?.icon?.suffix
+            ? `${place.categories[0].icon.prefix}256${place.categories[0].icon.suffix}`
+            : "https://ss3.4sqi.net/img/categories_v2/golf/default_256.png",
+      }));
 
     for (const course of golfCourses) {
       await GolfCourse.findOneAndUpdate(

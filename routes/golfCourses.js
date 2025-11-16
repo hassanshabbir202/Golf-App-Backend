@@ -6,6 +6,7 @@ const router = express.Router();
 
 const FSQ_API_KEY = "1IHHD0XAE2VVWSXVZZ0WUVVTM1ONUON2E4IFE1CA0VEXJW0C";
 
+// GET NEARBY COURSES
 router.get("/nearby", async (req, res) => {
   try {
     const { lat, lon } = req.query;
@@ -54,6 +55,5 @@ router.get("/nearby", async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 });
-
 
 module.exports = router;
